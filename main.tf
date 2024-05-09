@@ -73,15 +73,6 @@ module "lambda_function" {
       ]
       resources = ["arn:aws:logs:*:*:*"]
     }
-    # elbv2TargetAccess = {
-    # effect = "Allow"
-    # actions = [
-    # "elasticloadbalancing:RegisterTargets",
-    # "elasticloadbalancing:DescribeTargetHealth",
-    # "elasticloadbalancing:DeregisterTargets"
-    # ]
-    # resources = ["${var.target_group_arn}"]
-    # }
     createNetIfaces = {
       effect = "Allow"
       actions = [
