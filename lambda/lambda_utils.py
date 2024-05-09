@@ -116,7 +116,9 @@ def describe_target_health(tg_arn):
     """
     registered_ip_list = []
     try:
+        logger.info("INFO: inside describe_target_health")
         response = elbv2_client.describe_target_health(TargetGroupArn=tg_arn)
+        logger.info("INFO: after response")
         for target in response['TargetHealthDescriptions']:
             registered_ip = target['Target']['Id']
             registered_ip_list.append(registered_ip)

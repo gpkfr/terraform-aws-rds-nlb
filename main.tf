@@ -42,8 +42,8 @@ resource "aws_sns_topic_subscription" "this" {
 #
 module "lambda_function" {
   source                 = "terraform-aws-modules/lambda/aws"
-  version                = "~> 2.0"
-  function_name          = "${var.name}-function"
+  version                = "3.2.1"
+  function_name          = "${var.name}-rds-nlb-function"
   description            = "updates target-group with IP from RDS db_instance(s)"
   source_path            = "${path.module}/lambda/"
   handler                = "elb_hostname_as_target.lambda_handler"
@@ -56,7 +56,7 @@ module "lambda_function" {
   create_current_version_allowed_triggers   = false
   create_unqualified_alias_allowed_triggers = true
   allowed_triggers = {
-    allowFromSNS= {
+    allowFromSNS = {
       service    = "sns"
       source_arn = aws_sns_topic.this.arn
     }
@@ -64,26 +64,35 @@ module "lambda_function" {
 
   attach_policy_statements = true
   policy_statements = {
-   createNetIfaces = {
-     effect = "Allow"
-     actions = [
-       "elasticloadbalancing:RegisterTargets",
-       "elasticloadbalancing:DeregisterTargets",
-       "elasticloadbalancing:DescribeTargetHealth",
-       "ec2:CreateNetworkInterface",
-       "ec2:DescribeNetworkInterfaces",
-       "ec2:DeleteNetworkInterface"
-     ]
-     resources = [ "*" ]
-   }
-   writeLogs = {
-     effect = "Allow"
-     actions = [
+    writeLogs = {
+      effect = "Allow"
+      actions = [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents"
-     ]
-     resources = ["arn:aws:logs:*:*:*"]
+      ]
+      resources = ["arn:aws:logs:*:*:*"]
+    }
+    # elbv2TargetAccess = {
+    # effect = "Allow"
+    # actions = [
+    # "elasticloadbalancing:RegisterTargets",
+    # "elasticloadbalancing:DescribeTargetHealth",
+    # "elasticloadbalancing:DeregisterTargets"
+    # ]
+    # resources = ["${var.target_group_arn}"]
+    # }
+    createNetIfaces = {
+      effect = "Allow"
+      actions = [
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:DescribeTargetHealth",
+        "elasticloadbalancing:DeregisterTargets",
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface"
+      ]
+      resources = ["*"]
     }
   }
 
@@ -102,12 +111,12 @@ module "lambda_function" {
 # You want to register your db_instances when your apply
 # this module. Don't you ?
 data "aws_lambda_invocation" "this" {
-   function_name = module.lambda_function.lambda_function_qualified_arn
+  function_name = module.lambda_function.lambda_function_qualified_arn
 
-   input = <<EOJSON
- {
-   "Origin": "terraform invokation of ${var.name}"
- }
+  input = <<EOJSON
+{
+"Origin": "terraform invokation of ${var.name}"
+}
 EOJSON
 }
 

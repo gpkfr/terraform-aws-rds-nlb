@@ -14,7 +14,7 @@ CloudFormation Inputs settings):
 2. ELB_TG_ARN (mandatory): The ARN of the Elastic Load Balancer's target group
 3. DNS_SERVERS (mandatory): The DNS Server(s) to query TARGET_FQDN
 4. MAX_LOOKUP_PER_INVOCATION (optional): The max times of DNS lookup per fqdn
-5. REMOVE_UNKOWN_TG_IP (optional): Remove IPs which are not resolved with the given fqdns
+5. REMOVE_UNTRACKED_TG_IP (optional): Remove IPs which are not resolved with the given fqdns
 """
 if 'TARGET_FQDNS' in os.environ:
     TARGET_FQDNS = os.environ['TARGET_FQDNS'].split(" ")
@@ -58,6 +58,8 @@ if 'REMOVE_UNTRACKED_TG_IP' in os.environ:
 else:
     REMOVE_UNTRACKED_TG_IP = False
 
+print ("End Env part")
+
 # MAIN Function - This function will be invoked when Lambda is called
 def lambda_handler(event, context):
     logger = logging.getLogger()
@@ -67,7 +69,9 @@ def lambda_handler(event, context):
     logger.info("INFO: REMOVE_UNTRACKED_TG_IP: {}".format(REMOVE_UNTRACKED_TG_IP))
 
     # Get Currently Resgistered IPs list
+    logger.info("INFO: Enter in describe target health")
     registered_ip_list = utils.describe_target_health(ELB_TG_ARN)
+    logger.info("INFO: Exit describe target health")
 
     logger.info("INFO: registered_ip_list: {}".format(registered_ip_list))
 
